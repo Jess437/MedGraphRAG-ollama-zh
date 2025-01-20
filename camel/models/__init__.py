@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-from .anthropic_model import AnthropicModel
+# from .anthropic_model import AnthropicModel
 from .azure_openai_model import AzureOpenAIModel
 from .base_model import BaseModelBackend
 from .gemini_model import GeminiModel

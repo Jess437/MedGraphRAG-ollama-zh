@@ -1,11 +1,23 @@
-from langchain_core.prompts import ChatPromptTemplate
-import uuid
-from langchain.chat_models import ChatOpenAI
 import os
+import uuid
 from typing import Optional
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain.chat_models import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel
-from langchain.chains import create_extraction_chain_pydantic
+
+
+# from langchain.chains import create_extraction_chain_pydantic
+# from langchain.chains import create_extraction_chain
+
+
+# from langchain_experimental.llms.ollama_functions import OllamaFunctions
+
+from langchain_helper.ollama_functions import OllamaFunctions
+from langchain_helper.extraction import create_extraction_chain
+
 from dotenv import load_dotenv
+from config import config
 
 load_dotenv()
 
@@ -24,8 +36,14 @@ class AgenticChunker:
         if openai_api_key is None:
             raise ValueError("API key is not provided and not found in environment variables")
 
-        self.llm = ChatOpenAI(model='gpt-4-1106-preview', openai_api_key=openai_api_key, temperature=0)
-
+        # self.llm = ChatOpenAI(model=config.model, openai_api_key=openai_api_key, temperature=0)
+        self.llm = OllamaFunctions(
+            model=config.model,
+            base_url=config.base_url,
+            temperature=0,
+            format="json",
+        )
+        
     def add_propositions(self, propositions):
         for proposition in propositions:
             self.add_proposition(proposition)
@@ -44,12 +62,17 @@ class AgenticChunker:
         chunk_id = self._find_relevant_chunk(proposition)
 
         # If a chunk was found then add the proposition to it
-        if chunk_id:
+        
+        # if chunk_id:
+        if self.chunks.get(chunk_id):
             if self.print_logging:
                 print (f"Chunk Found ({self.chunks[chunk_id]['chunk_id']}), adding to: {self.chunks[chunk_id]['title']}")
             self.add_proposition_to_chunk(chunk_id, proposition)
             return
         else:
+            if chunk_id:
+                print("The parsing of the chunk_id failed")
+
             if self.print_logging:
                 print ("No chunks found")
             # If a chunk wasn't found, then create a new one
@@ -73,23 +96,26 @@ class AgenticChunker:
             [
                 (
                     "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    A new proposition was just added to one of your chunks, you should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
+"""
+You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+A new proposition was just added to one of your chunks, you should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
 
-                    A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
+A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
 
-                    You will be given a group of propositions which are in the chunk and the chunks current summary.
+You will be given a group of propositions which are in the chunk and the chunks current summary.
 
-                    Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
+Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Proposition: Greg likes to eat pizza
-                    Output: This chunk contains information about the types of food Greg likes to eat.
+Example:
+Input: Proposition: Greg likes to eat pizza
+Output: This chunk contains information about the types of food Greg likes to eat.
 
-                    Only respond with the chunk new summary, nothing else.
-                    """,
+Only respond with the chunk new summary, nothing else.
+
+Use Traditional Chinese instead of Simplified Chinese.
+內文請使用繁體中文。
+""",
                 ),
                 ("user", "Chunk's propositions:\n{proposition}\n\nCurrent chunk summary:\n{current_summary}"),
             ]
@@ -112,23 +138,26 @@ class AgenticChunker:
             [
                 (
                     "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    A new proposition was just added to one of your chunks, you should generate a very brief updated chunk title which will inform viewers what a chunk group is about.
+"""
+You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+A new proposition was just added to one of your chunks, you should generate a very brief updated chunk title which will inform viewers what a chunk group is about.
 
-                    A good title will say what the chunk is about.
+A good title will say what the chunk is about.
 
-                    You will be given a group of propositions which are in the chunk, chunk summary and the chunk title.
+You will be given a group of propositions which are in the chunk, chunk summary and the chunk title.
 
-                    Your title should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+Your title should anticipate generalization. If you get a proposition about apples, generalize it to food.
+Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Summary: This chunk is about dates and times that the author talks about
-                    Output: Date & Times
+Example:
+Input: Summary: This chunk is about dates and times that the author talks about
+Output: Date & Times
 
-                    Only respond with the new chunk title, nothing else.
-                    """,
+Only respond with the new chunk title, nothing else.
+
+Use Traditional Chinese instead of Simplified Chinese.
+內文請使用繁體中文。
+""",
                 ),
                 ("user", "Chunk's propositions:\n{proposition}\n\nChunk summary:\n{current_summary}\n\nCurrent chunk title:\n{current_title}"),
             ]
@@ -149,23 +178,26 @@ class AgenticChunker:
             [
                 (
                     "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    You should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
+"""
+You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+You should generate a very brief 1-sentence summary which will inform viewers what a chunk group is about.
 
-                    A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
+A good summary will say what the chunk is about, and give any clarifying instructions on what to add to the chunk.
 
-                    You will be given a proposition which will go into a new chunk. This new chunk needs a summary.
+You will be given a proposition which will go into a new chunk. This new chunk needs a summary.
 
-                    Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
+Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Proposition: Greg likes to eat pizza
-                    Output: This chunk contains information about the types of food Greg likes to eat.
+Example:
+Input: Proposition: Greg likes to eat pizza
+Output: This chunk contains information about the types of food Greg likes to eat.
 
-                    Only respond with the new chunk summary, nothing else.
-                    """,
+Only respond with the new chunk summary, nothing else.
+
+Use Traditional Chinese instead of Simplified Chinese.
+內文請使用繁體中文。
+""",
                 ),
                 ("user", "Determine the summary of the new chunk that this proposition will go into:\n{proposition}"),
             ]
@@ -184,23 +216,26 @@ class AgenticChunker:
             [
                 (
                     "system",
-                    """
-                    You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
-                    You should generate a very brief few word chunk title which will inform viewers what a chunk group is about.
+"""
+You are the steward of a group of chunks which represent groups of sentences that talk about a similar topic
+You should generate a very brief few word chunk title which will inform viewers what a chunk group is about.
 
-                    A good chunk title is brief but encompasses what the chunk is about
+A good chunk title is brief but encompasses what the chunk is about
 
-                    You will be given a summary of a chunk which needs a title
+You will be given a summary of a chunk which needs a title
 
-                    Your titles should anticipate generalization. If you get a proposition about apples, generalize it to food.
-                    Or month, generalize it to "date and times".
+Your titles should anticipate generalization. If you get a proposition about apples, generalize it to food.
+Or month, generalize it to "date and times".
 
-                    Example:
-                    Input: Summary: This chunk is about dates and times that the author talks about
-                    Output: Date & Times
+Example:
+Input: Summary: This chunk is about dates and times that the author talks about
+Output: Date & Times
 
-                    Only respond with the new chunk title, nothing else.
-                    """,
+Only respond with the new chunk title, nothing else.
+
+Use Traditional Chinese instead of Simplified Chinese.
+內文請使用繁體中文。
+""",
                 ),
                 ("user", "Determine the title of the chunk that this summary belongs to:\n{summary}"),
             ]
@@ -251,28 +286,28 @@ class AgenticChunker:
             [
                 (
                     "system",
-                    """
-                    Determine whether or not the "Proposition" should belong to any of the existing chunks.
+"""
+Determine whether or not the "Proposition" should belong to any of the existing chunks.
 
-                    A proposition should belong to a chunk of their meaning, direction, or intention are similar.
-                    The goal is to group similar propositions and chunks.
+A proposition should belong to a chunk of their meaning, direction, or intention are similar.
+The goal is to group similar propositions and chunks.
 
-                    If you think a proposition should be joined with a chunk, return the chunk id.
-                    If you do not think an item should be joined with an existing chunk, just return "No chunks"
+If you think a proposition should be joined with a chunk, return the chunk id.
+If you do not think an item should be joined with an existing chunk, just return "No chunks"
 
-                    Example:
-                    Input:
-                        - Proposition: "Greg really likes hamburgers"
-                        - Current Chunks:
-                            - Chunk ID: 2n4l3d
-                            - Chunk Name: Places in San Francisco
-                            - Chunk Summary: Overview of the things to do with San Francisco Places
+Example:
+Input:
+    - Proposition: "Greg really likes hamburgers"
+    - Current Chunks:
+        - Chunk ID: 2n4l3d
+        - Chunk Name: Places in San Francisco
+        - Chunk Summary: Overview of the things to do with San Francisco Places
 
-                            - Chunk ID: 93833k
-                            - Chunk Name: Food Greg likes
-                            - Chunk Summary: Lists of the food and dishes that Greg likes
-                    Output: 93833k
-                    """,
+        - Chunk ID: 93833k
+        - Chunk Name: Food Greg likes
+        - Chunk Summary: Lists of the food and dishes that Greg likes
+Output: 93833k
+""",
                 ),
                 ("user", "Current Chunks:\n--Start of current chunks--\n{current_chunk_outline}\n--End of current chunks--"),
                 ("user", "Determine if the following statement should belong to one of the chunks outlined:\n{proposition}"),
@@ -286,16 +321,41 @@ class AgenticChunker:
             "current_chunk_outline": current_chunk_outline
         }).content
 
-        # Pydantic data class
-        class ChunkID(BaseModel):
-            """Extracting the chunk id"""
-            chunk_id: Optional[str]
+        # # Pydantic data class
+        # class ChunkID(BaseModel):
+        #     """Extracting the chunk id"""
+        #     chunk_id: Optional[str]
             
-        # Extraction to catch-all LLM responses. This is a bandaid
-        extraction_chain = create_extraction_chain_pydantic(pydantic_schema=ChunkID, llm=self.llm)
+        # # Extraction to catch-all LLM responses. This is a bandaid
+        # extraction_chain = create_extraction_chain_pydantic(pydantic_schema=ChunkID, llm=self.llm)  
+        
+        # breakpoint()
+        
+        extraction_chain = create_extraction_chain(
+            {
+                "properties": {
+                    "chunk_id": {"type": "string"},
+                },
+            },
+            llm=self.llm
+        )
+
+        print("####################")
+        print("chunk_found:")
+        print(chunk_found)    
+        print("#####################")
         extraction_found = extraction_chain.run(chunk_found)
+        print("#####################")
+        print("extraction_found:")
+        print(extraction_found)
+        print("#####################")
+        
         if extraction_found:
-            chunk_found = extraction_found[0].chunk_id
+            # chunk_found = extraction_found[0].chunk_id
+            chunk_found = extraction_found[0]["chunk_id"]
+
+        if chunk_found is None:
+            return None
 
         # If you got a response that isn't the chunk id limit, chances are it's a bad response or it found nothing
         # So return nothing

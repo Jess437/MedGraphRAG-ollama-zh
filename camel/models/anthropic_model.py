@@ -21,7 +21,7 @@ from camel.messages import OpenAIMessage
 from camel.models.base_model import BaseModelBackend
 from camel.types import ChatCompletion, ModelType
 from camel.utils import (
-    AnthropicTokenCounter,
+    # AnthropicTokenCounter,
     BaseTokenCounter,
     api_keys_required,
 )

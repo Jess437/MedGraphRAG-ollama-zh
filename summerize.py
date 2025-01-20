@@ -1,10 +1,9 @@
 import openai
+from openai import OpenAI
 from concurrent.futures import ThreadPoolExecutor
 import tiktoken
 import os
-
-# Add your own OpenAI API key
-openai_api_key = os.getenv("OPENAI_API_KEY")
+from config import config
 
 sum_prompt = """
 Generate a structured summary from the provided medical source (report, paper, or book), strictly adhering to the following categories. The summary should list key information under each category in a concise format: 'CATEGORY_NAME: Key information'. No additional explanations or detailed descriptions are necessary unless directly related to the categories:
@@ -29,11 +28,30 @@ SEVERITY: Severity of the conditions mentioned.
 MEDICAL_DEVICE: List any medical devices used.
 SUBSTANCE_ABUSE: Note any substance abuse mentioned.
 Each category should be addressed only if relevant to the content of the medical source. Ensure the summary is clear and direct, suitable for quick reference.
+
+Use Traditional Chinese instead of Simplified Chinese.
+內文請使用繁體中文。
 """
 
-def call_openai_api(chunk):
-    response = openai.chat.completions.create(
-        model="gpt-4-1106-preview",
+
+def split_into_chunks(text, tokens=500):
+    # should be changed to gpt-4o?
+    encoding = tiktoken.encoding_for_model("gpt-4o-mini")
+    words = encoding.encode(text)
+    chunks = []
+    for i in range(0, len(words), tokens):
+        chunks.append(' '.join(encoding.decode(words[i:i + tokens])))
+    return chunks
+
+
+def call_ollama_api(chunk):
+    client = OpenAI(
+        base_url=f"{config.base_url}/v1",
+        api_key="ollama"
+    )
+    
+    response = client.chat.completions.create(
+        model=config.model,
         messages=[
             {"role": "system", "content": sum_prompt},
             {"role": "user", "content": f" {chunk}"},
@@ -45,21 +63,13 @@ def call_openai_api(chunk):
     )
     return response.choices[0].message.content
 
-def split_into_chunks(text, tokens=500):
-    encoding = tiktoken.encoding_for_model('gpt-4-1106-preview')
-    words = encoding.encode(text)
-    chunks = []
-    for i in range(0, len(words), tokens):
-        chunks.append(' '.join(encoding.decode(words[i:i + tokens])))
-    return chunks   
 
 def process_chunks(content):
     chunks = split_into_chunks(content)
 
     # Processes chunks in parallel
     with ThreadPoolExecutor() as executor:
-        responses = list(executor.map(call_openai_api, chunks))
-    # print(responses)
+        responses = list(executor.map(call_ollama_api, chunks))
     return responses
 
 

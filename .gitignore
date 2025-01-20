@@ -5,6 +5,7 @@ dataset_test
 test*
 .dockerignore
 app.sh
+backup/
 
 ### Python template
 # Byte-compiled / optimized / DLL files

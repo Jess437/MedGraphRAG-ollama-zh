@@ -6,6 +6,7 @@ from camel.storages import Neo4jGraph
 import uuid
 from summerize import process_chunks
 import openai
+from config import config
 
 sys_prompt_one = """
 Please answer the question using insights supported by provided graph-based data relevant to medical information.
@@ -13,13 +14,15 @@ Please answer the question using insights supported by provided graph-based data
 
 sys_prompt_two = """
 Modify the response to the question using the provided references. Include precise citations relevant to your answer. You may use multiple citations simultaneously, denoting each with the reference index number. For example, cite the first and third documents as [1][3]. If the references do not pertain to the response, simply provide a concise answer to the original question.
+用繁體中文回答。
 """
 
 # Add your own OpenAI API key
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
-def get_embedding(text, mod = "text-embedding-3-small"):
-    client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
+def get_embedding(text, mod=config.emb_model):
+    client = OpenAI(
+        base_url=f"{config.base_url}/v1",
+        api_key="ollama"
+    )
 
     response = client.embeddings.create(
         input=text,
@@ -80,8 +83,13 @@ def add_sum(n4j,content,gid):
     return s
 
 def call_llm(sys, user):
-    response = openai.chat.completions.create(
-        model="gpt-4-1106-preview",
+    client = OpenAI(
+        base_url=f"{config.base_url}/v1",
+        api_key="ollama"
+    )
+    
+    response = client.chat.completions.create(
+        model=config.model,
         messages=[
             {"role": "system", "content": sys},
             {"role": "user", "content": f" {user}"},
@@ -102,14 +110,14 @@ def find_index_of_largest(nums):
     
     return largest_original_index
 
-def get_response(n4j, gid, query):
-    selfcont = ret_context(n4j, gid)
-    linkcont = link_context(n4j, gid)
-    user_one = "the question is: " + query + "the provided information is:" +  "".join(selfcont)
-    res = call_llm(sys_prompt_one,user_one)
-    user_two = "the question is: " + query + "the last response of it is:" +  res + "the references are: " +  "".join(linkcont)
-    res = call_llm(sys_prompt_two,user_two)
-    return res
+# def get_response(n4j, gid, query):
+#     selfcont = ret_context(n4j, gid)
+#     linkcont = link_context(n4j, gid)
+#     user_one = "the question is: " + query + "the provided information is:" +  "".join(selfcont)
+#     res = call_llm(sys_prompt_one,user_one)
+#     user_two = "the question is: " + query + "the last response of it is:" +  res + "the references are: " +  "".join(linkcont)
+#     res = call_llm(sys_prompt_two,user_two)
+#     return res
 
 def link_context(n4j, gid):
     cont = []
@@ -160,7 +168,8 @@ def ret_context(n4j, gid):
     """
     res = n4j.query(ret_query, {'gid': gid})
     for r in res:
-        cont.append(r['NodeId1'] + r['relType'] + r['NodeId2'])
+        # cont.append(r['NodeId1'] + r['relType'] + r['NodeId2'])
+        cont.append(f"{r['NodeId1']} {r['relType']} {r['NodeId2']}")
     return cont
 
 def merge_similar_nodes(n4j, gid):
@@ -237,5 +246,3 @@ def str_uuid():
 
     # Convert UUID to a string
     return str(generated_uuid)
-
-
