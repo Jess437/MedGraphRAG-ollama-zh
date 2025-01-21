@@ -9,12 +9,12 @@ import openai
 from config import config
 
 sys_prompt_one = """
-Please answer the question using insights supported by provided graph-based data relevant to medical information.
+請根據醫療知識圖譜提供的資料並使用繁體中文來回答問題。
 """
 
 sys_prompt_two = """
-Modify the response to the question using the provided references. Include precise citations relevant to your answer. You may use multiple citations simultaneously, denoting each with the reference index number. For example, cite the first and third documents as [1][3]. If the references do not pertain to the response, simply provide a concise answer to the original question.
-用繁體中文回答。
+請根據提供的參考資料修改對問題的回答。且針對你的回答加入相關的引用，你可以同時使用多個引用，並以參考資料的索引編號來標註。例如，引用第一份和第三份文件時可以標註為[1][3]。如果參考資料與回答無關，請直接對原始問題提供簡潔的答覆。
+請用繁體中文回答。
 """
 
 # Add your own OpenAI API key

@@ -49,7 +49,7 @@ class OllamaModel:
         self.model_config_dict = model_config_dict
         # Use OpenAI cilent as interface call Ollama
         self._client = OpenAI(
-            timeout=60,
+            timeout=240,
             max_retries=3,
             base_url=url,
             api_key="ollama",  # required but ignored

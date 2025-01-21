@@ -36,12 +36,12 @@ def get_response(n4j, gid, query):
     linkcont = link_context(n4j, gid)
     
     user_one = "使用者的問題為: " + query + "\n" + \
-               "以下是提供參考的資訊: " +  str(selfcont)
+               "提供的參考資訊: " +  str(selfcont)
     res = call_llm(sys_prompt_one,user_one)
     
     user_two = "使用者的問題為: " + query + "\n" + \
                "你上次的回答是: " +  res + "\n" + \
-               "提供的參考: " +  " ".join(linkcont)           
+               "提供的參考資訊: " +  " ".join(linkcont)           
     res = call_llm(sys_prompt_two,user_two)
     
     print("#" * 100)

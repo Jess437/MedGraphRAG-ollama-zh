@@ -29,18 +29,12 @@ def _get_extraction_function(entity_schema: dict) -> dict:
         },
     }
 
+_EXTRACTION_TEMPLATE ="""請從以下段落中提取並保存提到的相關實體及其屬性。
+僅提取在 'information_extraction' 函數中提到的屬性。
+如果某個屬性沒有出現或不是該函數所需要的參數，請勿將其包含在輸出中。
 
-_EXTRACTION_TEMPLATE = """Extract and save the relevant entities mentioned \
-in the following passage together with their properties.
-
-Only extract the properties mentioned in the 'information_extraction' function.
-
-If a property is not present and is not required in the function parameters, do not include it in the output.
-
-Passage:
-{input}
+段落：{input}
 """  # noqa: E501
-
 
 def create_extraction_chain(
     schema: dict,

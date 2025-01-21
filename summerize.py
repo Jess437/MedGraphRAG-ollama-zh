@@ -6,31 +6,29 @@ import os
 from config import config
 
 sum_prompt = """
-Generate a structured summary from the provided medical source (report, paper, or book), strictly adhering to the following categories. The summary should list key information under each category in a concise format: 'CATEGORY_NAME: Key information'. No additional explanations or detailed descriptions are necessary unless directly related to the categories:
+請根據提供的醫學資料（報告、論文或書籍）生成結構化摘要，並嚴格按照以下類別進行。摘要應以簡潔的格式:"類別名稱：關鍵信息"列出每個類別下的重要信息。除非與類別直接相關，否則無需額外解釋或詳細描述：
 
-ANATOMICAL_STRUCTURE: Mention any anatomical structures specifically discussed.
-BODY_FUNCTION: List any body functions highlighted.
-BODY_MEASUREMENT: Include normal measurements like blood pressure or temperature.
-BM_RESULT: Results of these measurements.
-BM_UNIT: Units for each measurement.
-BM_VALUE: Values of these measurements.
-LABORATORY_DATA: Outline any laboratory tests mentioned.
-LAB_RESULT: Outcomes of these tests (e.g., 'increased', 'decreased').
-LAB_VALUE: Specific values from the tests.
-LAB_UNIT: Units of measurement for these values.
-MEDICINE: Name medications discussed.
-MED_DOSE, MED_DURATION, MED_FORM, MED_FREQUENCY, MED_ROUTE, MED_STATUS, MED_STRENGTH, MED_UNIT, MED_TOTALDOSE: Provide concise details for each medication attribute.
-PROBLEM: Identify any medical conditions or findings.
-PROCEDURE: Describe any procedures.
-PROCEDURE_RESULT: Outcomes of these procedures.
-PROC_METHOD: Methods used.
-SEVERITY: Severity of the conditions mentioned.
-MEDICAL_DEVICE: List any medical devices used.
-SUBSTANCE_ABUSE: Note any substance abuse mentioned.
-Each category should be addressed only if relevant to the content of the medical source. Ensure the summary is clear and direct, suitable for quick reference.
+解剖結構：提及任何被特別討論的解剖結構。
+身體功能：列出被強調的任何身體功能。
+身體測量：包含任何的常規測量，像是血壓或體溫。
+測量結果：這些測量的結果。
+測量單位：每項測量的單位。
+測量值：這些測量的數值。
+實驗室數據：概述任何被提及的實驗室試驗。
+實驗室結果：這些試驗的結果（例如"增加"、"減少"）。
+實驗室數值：試驗的具體數值。
+實驗室單位：這些數值的測量單位。
+藥物：被討論到的藥物名稱。
+藥物劑量、用藥時長、藥物形式、用藥頻率、給藥途徑、用藥狀態、藥物強度、藥物單位、藥物總劑量：為每個藥物屬性提供簡要的資訊。
+問題：指出任何醫療狀況或發現。
+醫療程序：描述任何醫療程序。
+程序結果：這些程序的結果。
+程序方法：程序所使用的方法。
+嚴重程度：被提到的情況的嚴重程度。
+醫療設備：列出任何被使用到的醫療設備。
+物質濫用：註明任何被提及的物質濫用情況。
 
-Use Traditional Chinese instead of Simplified Chinese.
-內文請使用繁體中文。
+每個類別僅在與醫學資料相關時才需回答。請確保摘要清晰直接，適合快速參考，並使用繁體中文回答。
 """
 
 
