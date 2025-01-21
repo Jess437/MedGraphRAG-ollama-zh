@@ -30,11 +30,11 @@ class AgenticChunker:
         self.generate_new_metadata_ind = True
         self.print_logging = True
 
-        if openai_api_key is None:
-            openai_api_key = os.getenv("OPENAI_API_KEY")
+        # if openai_api_key is None:
+        #     openai_api_key = os.getenv("OPENAI_API_KEY")
 
-        if openai_api_key is None:
-            raise ValueError("API key is not provided and not found in environment variables")
+        # if openai_api_key is None:
+        #     raise ValueError("API key is not provided and not found in environment variables")
 
         # self.llm = ChatOpenAI(model=config.model, openai_api_key=openai_api_key, temperature=0)
         self.llm = OllamaFunctions(
