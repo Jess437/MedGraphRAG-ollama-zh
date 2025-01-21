@@ -30,7 +30,6 @@ class AgenticChunker:
         self.generate_new_metadata_ind = True
         self.print_logging = True
 
-
         # self.llm = ChatOpenAI(model=config.model, openai_api_key=openai_api_key, temperature=0)
         self.llm = OllamaFunctions(
             model=config.model,
