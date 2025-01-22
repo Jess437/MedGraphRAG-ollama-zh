@@ -30,11 +30,6 @@ class AgenticChunker:
         self.generate_new_metadata_ind = True
         self.print_logging = True
 
-        if openai_api_key is None:
-            openai_api_key = os.getenv("OPENAI_API_KEY")
-
-        if openai_api_key is None:
-            raise ValueError("API key is not provided and not found in environment variables")
 
         # self.llm = ChatOpenAI(model=config.model, openai_api_key=openai_api_key, temperature=0)
         self.llm = OllamaFunctions(
@@ -292,7 +287,7 @@ Determine whether or not the "Proposition" should belong to any of the existing 
 A proposition should belong to a chunk of their meaning, direction, or intention are similar.
 The goal is to group similar propositions and chunks.
 
-If you think a proposition should be joined with a chunk, return the chunk id.
+If you think a proposition should be joined with a chunk, return the chunk id. You don't need to return any details about the chunk.
 If you do not think an item should be joined with an existing chunk, just return "No chunks"
 
 Example:
