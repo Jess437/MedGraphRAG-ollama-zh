@@ -77,7 +77,9 @@ if __name__ == '__main__':
         if args.crossgraphmerge:
             merge_similar_nodes(n4j, None)
         
-        for content in content_generator(args.data, start_idx=args.start_idx, length=args.len):
+        for idx, content in enumerate(content_generator(args.data, start_idx=args.start_idx, length=args.len)):
+            print("#" * 100)
+            print(f"Running document {idx+1}")
             print(content[:40])
             gid = str_uuid()
             n4j = creat_metagraph(args, content, gid, n4j)

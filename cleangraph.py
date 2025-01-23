@@ -22,6 +22,7 @@
 
 
 from neo4j import GraphDatabase
+from config import config
 
 def clean_graph(uri, user, pwd):
     driver = GraphDatabase.driver(uri, auth=(user, pwd))
@@ -33,6 +34,6 @@ def clean_graph(uri, user, pwd):
 response = input("Do you want to clean the graph? (y/n): ")
 
 if response.lower() == "y":
-    clean_graph("bolt://host.docker.internal:7687", "neo4j", "binglabi")
+    clean_graph(config.neo4j_url, config.neo4j_user, config.neo4j_pass)
 else:
     print("Graph will not be cleaned.")
