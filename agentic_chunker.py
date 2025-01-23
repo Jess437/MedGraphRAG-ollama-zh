@@ -310,50 +310,54 @@ Output: 93833k
 
         runnable = PROMPT | self.llm
 
-        chunk_found = runnable.invoke({
-            "proposition": proposition,
-            "current_chunk_outline": current_chunk_outline
-        }).content
+        try: 
+            chunk_found = runnable.invoke({
+                "proposition": proposition,
+                "current_chunk_outline": current_chunk_outline
+            }).content
 
-        # # Pydantic data class
-        # class ChunkID(BaseModel):
-        #     """Extracting the chunk id"""
-        #     chunk_id: Optional[str]
+            # # Pydantic data class
+            # class ChunkID(BaseModel):
+            #     """Extracting the chunk id"""
+            #     chunk_id: Optional[str]
+                
+            # # Extraction to catch-all LLM responses. This is a bandaid
+            # extraction_chain = create_extraction_chain_pydantic(pydantic_schema=ChunkID, llm=self.llm)  
             
-        # # Extraction to catch-all LLM responses. This is a bandaid
-        # extraction_chain = create_extraction_chain_pydantic(pydantic_schema=ChunkID, llm=self.llm)  
-        
-        # breakpoint()
-        
-        extraction_chain = create_extraction_chain(
-            {
-                "properties": {
-                    "chunk_id": {"type": "string"},
+            # breakpoint()
+            
+            extraction_chain = create_extraction_chain(
+                {
+                    "properties": {
+                        "chunk_id": {"type": "string"},
+                    },
                 },
-            },
-            llm=self.llm
-        )
+                llm=self.llm
+            )
 
-        print("####################")
-        print("chunk_found:")
-        print(chunk_found)    
-        print("#####################")
-        extraction_found = extraction_chain.run(chunk_found)
-        print("#####################")
-        print("extraction_found:")
-        print(extraction_found)
-        print("#####################")
+            print("####################")
+            print("chunk_found:")
+            print(chunk_found)    
+            print("#####################")
+            extraction_found = extraction_chain.run(chunk_found)
+            print("#####################")
+            print("extraction_found:")
+            print(extraction_found)
+            print("#####################")
+            
+            if extraction_found:
+                # chunk_found = extraction_found[0].chunk_id
+                chunk_found = extraction_found[0]["chunk_id"]
+
+            if chunk_found is None:
+                return None
+
+            # If you got a response that isn't the chunk id limit, chances are it's a bad response or it found nothing
+            # So return nothing
+            if len(chunk_found) != self.id_truncate_limit:
+                return None
         
-        if extraction_found:
-            # chunk_found = extraction_found[0].chunk_id
-            chunk_found = extraction_found[0]["chunk_id"]
-
-        if chunk_found is None:
-            return None
-
-        # If you got a response that isn't the chunk id limit, chances are it's a bad response or it found nothing
-        # So return nothing
-        if len(chunk_found) != self.id_truncate_limit:
+        except Exception as e:
             return None
 
         return chunk_found

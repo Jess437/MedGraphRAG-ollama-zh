@@ -78,11 +78,26 @@ def run_chunk(essay):
 
     essay_propositions = []
 
+    # for i, para in enumerate(paragraphs):
+    #     propositions = get_propositions(para, runnable, extraction_chain)
+        
+    #     essay_propositions.extend(propositions)
+    #     # print (f"Done with {i}")
+
+    max_retries = 5  # 最大重試次數
+
     for i, para in enumerate(paragraphs):
-        propositions = get_propositions(para, runnable, extraction_chain)
+        retry_count = 0
+        while retry_count < max_retries:
+            try: 
+                propositions = get_propositions(para, runnable, extraction_chain)
+                break
+            except Exception as e:
+                # 捕獲異常並增加重試計數
+                retry_count += 1
+                print(f"Error processing paragraph {i}, attempt {retry_count}: {e}")
         
         essay_propositions.extend(propositions)
-        print (f"Done with {i}")
 
     ac = AgenticChunker()
     ac.add_propositions(essay_propositions)
